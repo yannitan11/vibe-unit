@@ -1,0 +1,404 @@
+/* ───────────────────────────────────────────────────────────
+   VIBE UNIT — CV-debug instrument aesthetic (HÄND STUDIO family).
+   The warped head is the hero; chrome is hairline-thin technical
+   mono. One accent: volt green.
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  --ink: #f4f2ec;
+  --ink-dim: rgba(244, 242, 236, 0.42);
+  --ink-faint: rgba(244, 242, 236, 0.16);
+  --bg: #08080a;
+  --volt: #c8ff3c;
+  --pad: clamp(14px, 2.4vw, 30px);
+  --mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --display: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* the camera element doubles as the RAW feed thumbnail once running */
+#cam {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+#cam.pip {
+  width: 128px;
+  height: auto;
+  opacity: 0.92;
+  right: var(--pad);
+  bottom: calc(var(--pad) + 42px);
+  left: auto;
+  z-index: 4;
+  transform: scaleX(-1);
+  border: 1px solid var(--ink-faint);
+}
+.pip-tag {
+  position: absolute;
+  right: var(--pad);
+  bottom: calc(var(--pad) + 42px);
+  z-index: 5;
+  padding: 2px 5px;
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: var(--bg);
+  background: var(--ink);
+  pointer-events: none;
+}
+
+#view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--bg);
+}
+
+/* subtle film: vignette + faint scanlines, sells the "instrument" look */
+.film {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(120% 120% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.55) 100%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.018) 0px,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: overlay;
+}
+
+/* ─────────────── HUD ─────────────── */
+.hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.rule {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  height: 1px;
+  background: var(--ink-faint);
+}
+.rule-top {
+  top: calc(var(--pad) + 26px);
+}
+.rule-bottom {
+  bottom: calc(var(--pad) + 26px);
+}
+
+.hud-top,
+.hud-bottom {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.hud-top {
+  top: var(--pad);
+}
+.hud-bottom {
+  bottom: var(--pad);
+  align-items: flex-end;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--volt);
+  box-shadow: 0 0 8px rgba(200, 255, 60, 0.7);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.readouts {
+  display: flex;
+  gap: clamp(18px, 3vw, 46px);
+  text-align: right;
+}
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  line-height: 1;
+}
+.readout .label {
+  font-size: 9px;
+  color: var(--ink-dim);
+  letter-spacing: 0.24em;
+}
+.readout .value {
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 4ch;
+  transition: color 0.2s ease;
+}
+#rStatus.is-locked { color: var(--volt); }
+#rStatus.is-scan { color: #ffd24a; }
+
+.ticker {
+  font-weight: 700;
+  color: var(--ink);
+  transition: opacity 0.25s ease;
+}
+.ticker.blink { opacity: 0; }
+.mode {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.keys {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--pad) - 4px);
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+.keys button {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: none;
+  border: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+.keys button:hover {
+  color: var(--volt);
+}
+
+/* ─────────────── Verdict card ─────────────── */
+.card {
+  position: absolute;
+  z-index: 6;
+  left: var(--pad);
+  bottom: calc(var(--pad) + 44px);
+  width: min(420px, calc(100vw - 2 * var(--pad)));
+  padding: 22px 24px 24px;
+  background: rgba(8, 8, 10, 0.88);
+  border: 1px solid var(--ink-faint);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card[hidden] { display: none; }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+  .dot { animation: none; }
+}
+
+.card-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 8px;
+}
+.card h2 {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(30px, 4.4vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--volt);
+  margin-bottom: 14px;
+}
+.card-copy {
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(244, 242, 236, 0.72);
+  margin-bottom: 14px;
+}
+.card-meta {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 18px;
+}
+.card-actions {
+  display: flex;
+  gap: 10px;
+}
+.card .cta {
+  padding: 12px 18px;
+  font-size: 11px;
+}
+.ghost {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--ink-faint);
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.ghost:hover {
+  border-color: var(--volt);
+  color: var(--volt);
+}
+
+/* ─────────────── Screens ─────────────── */
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 8vw;
+  background: radial-gradient(130% 130% at 50% 30%, #101014 0%, #060607 70%);
+}
+.screen[hidden] { display: none; }
+
+.screen-inner {
+  max-width: 560px;
+  width: 100%;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 26px;
+}
+.screen h1 {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(38px, 7vw, 72px);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  margin-bottom: 26px;
+}
+.lede {
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgba(244, 242, 236, 0.68);
+  max-width: 44ch;
+  margin-bottom: 34px;
+}
+.lede b { color: var(--ink); font-weight: 700; }
+
+.cta {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--ink);
+  border: 0;
+  padding: 16px 26px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(200, 255, 60, 0.16);
+  background: #fff;
+}
+.cta:active { transform: translateY(0); }
+
+.fineprint {
+  margin-top: 18px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* ─────────────── Loading ─────────────── */
+.loading {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ink-dim);
+}
+.loading[hidden] { display: none; }
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink-faint);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 560px) {
+  .keys { display: none; }
+  .readouts { gap: 16px; }
+  #cam.pip { width: 88px; }
+}

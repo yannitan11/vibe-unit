@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vibe-unit",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/tmp/claude-preview/serve.py", "/tmp/claude-preview/vibe-unit", "8135"],
+      "port": 8135
+    }
+  ]
+}

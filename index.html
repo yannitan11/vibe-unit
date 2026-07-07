@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>VIBE UNIT — your face is the chart</title>
+    <meta
+      name="description"
+      content="A webcam vibe radar. Face tracking warps your head into a live 5-axis chart, pinch the spikes to argue with it, press read for a verdict. Runs entirely in your browser."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <video id="cam" playsinline muted></video>
+      <div class="pip-tag" id="pipTag" hidden>RAW</div>
+      <canvas id="view"></canvas>
+      <div class="film" aria-hidden="true"></div>
+
+      <!-- Fixed HUD chrome -->
+      <div class="hud" aria-hidden="true">
+        <div class="rule rule-top"></div>
+        <div class="rule rule-bottom"></div>
+
+        <header class="hud-top">
+          <div class="brand"><span class="dot"></span>VIBE · UNIT</div>
+          <div class="readouts">
+            <div class="readout">
+              <span class="label">STATUS</span>
+              <span class="value" id="rStatus">BOOTING</span>
+            </div>
+            <div class="readout">
+              <span class="label">FPS</span>
+              <span class="value" id="rFps">––</span>
+            </div>
+            <div class="readout">
+              <span class="label">INPUT</span>
+              <span class="value" id="rInput">NO FACE</span>
+            </div>
+          </div>
+        </header>
+
+        <footer class="hud-bottom">
+          <div class="ticker" id="ticker">YOUR FACE IS THE CHART</div>
+          <div class="readout mode">
+            <span class="label">MODE</span>
+            <span class="value" id="rMode">AUTO READ</span>
+          </div>
+        </footer>
+
+        <div class="keys">
+          <button id="kRead">[SPACE] READ</button>
+          <button id="kMode">[M] MODE</button>
+          <button id="kReset">[R] RESET</button>
+          <button id="kSave">[S] POSTER</button>
+        </div>
+      </div>
+
+      <!-- Verdict card -->
+      <aside class="card" id="resultCard" hidden>
+        <p class="card-eyebrow">RESULT :</p>
+        <h2 id="resName">warm machine</h2>
+        <p class="card-copy" id="resCopy"></p>
+        <p class="card-meta" id="resNo">READING NO. 0000</p>
+        <div class="card-actions">
+          <button class="cta" id="saveBtn">SAVE POSTER</button>
+          <button class="ghost" id="againBtn">GO AGAIN</button>
+        </div>
+      </aside>
+
+      <!-- Start gate -->
+      <div class="screen" id="startScreen">
+        <div class="screen-inner">
+          <p class="eyebrow">VIBE · UNIT</p>
+          <h1>Your face<br />is the chart.</h1>
+          <p class="lede">
+            The camera reads your expression and warps your head into a live
+            five-axis vibe radar. <b>Pinch</b> a spike to argue with the reading,
+            press <b>read</b> to lock a verdict, save the poster. Nothing leaves
+            your device.
+          </p>
+          <button class="cta" id="enterBtn">ENABLE CAMERA →</button>
+          <p class="fineprint">Needs webcam access · works in Chrome on a laptop</p>
+        </div>
+      </div>
+
+      <!-- Error / fallback -->
+      <div class="screen" id="errorScreen" hidden>
+        <div class="screen-inner">
+          <p class="eyebrow">SIGNAL LOST</p>
+          <h1 id="errTitle">No camera.</h1>
+          <p class="lede" id="errMsg"></p>
+          <button class="cta" id="retryBtn">TRY AGAIN</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading" hidden>
+        <div class="spinner"></div>
+        <span>LOADING FACE MODEL…</span>
+      </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

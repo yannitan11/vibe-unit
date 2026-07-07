@@ -7,7 +7,7 @@ import { startCamera, CameraError } from './camera.js';
 import * as T from './tracking.js';
 import * as G from './gestures.js';
 import { AxisEngine, LM } from './axes.js';
-import { HeadWarp, polygonRadii, silhouetteRadii, smoothProfile } from './warp.js';
+import { HeadWarp, polygonRadii, silhouetteRadii, smoothProfile, pullProfile } from './warp.js';
 import * as HUD from './hud.js';
 import { pickResult, nextReadingNo } from './results.js';
 import { renderPoster, downloadPoster } from './poster.js';
@@ -38,7 +38,7 @@ let faceSeenAt = 0;
 let rBase = null; // smoothed silhouette profile, device px
 let headPx = null; // head centre in canvas device px
 
-let sculptValues = AXES.map(() => 0.3);
+let sculptValues = AXES.map(() => 0);
 const grabbed = new Map(); // hand index (or 'mouse') → axis index
 const pinched = new Map(); // hand index → bool (hysteresis)
 let fistHold = 0;
@@ -147,7 +147,9 @@ function step(now, dtMs) {
       rBase[i] = fresh ? px : rBase[i] + (px - rBase[i]) * SMOOTH.profileLerp;
     }
     headPx = mapPoint(cov, { x: cxN, y: cyN });
-    const rTarget = polygonRadii(values, WARP.rays, chart.innerR, chart.outerR);
+    // expressions pull the silhouette toward the polygon; rest = pure cutout
+    const rPoly = polygonRadii(values, WARP.rays, chart.innerR, chart.outerR);
+    const rTarget = pullProfile(rBase, rPoly, values, WARP.pullDead);
     headOk = warp.render(video, mask, rBase, rTarget, headPx, cov, dpr);
   }
   if (!face) headPx = null;

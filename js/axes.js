@@ -36,7 +36,7 @@ export const LM = { eyeR: 33, eyeL: 263, nose: 1 };
 
 export class AxisEngine {
   constructor() {
-    this.values = AXES.map(() => 0.3);
+    this.values = AXES.map(() => 0);
     this._prevCenter = null;
     this._speedSm = 0;
   }

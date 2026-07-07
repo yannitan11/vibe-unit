@@ -54,15 +54,16 @@ export const CHART = {
 };
 
 // ── The five axes ──
-// value = clamp01(bias + Σ weight·blendshape + Σ weight·feature), smoothed.
+// value = clamp01(Σ weight·blendshape + Σ weight·feature), smoothed.
+// IMPORTANT: values must read ≈0 on a neutral, still face — the warp only
+// pulls when an axis is excited, so a resting face shows as an untouched
+// head cutout. No resting biases, no "stillness" bonuses.
 // Blendshape names are MediaPipe's. Features (computed in axes.js):
 //   speed — head motion, 0 still → 1 fast
-//   still — 1 − speed
 //   roll  — head tilt magnitude, 0 level → 1 ~26°
 export const AXES = [
   {
     key: 'VOLT', // wired, awake, running hot
-    bias: 0.1,
     weights: {
       eyeWideLeft: 0.8,
       eyeWideRight: 0.8,
@@ -74,7 +75,6 @@ export const AXES = [
   },
   {
     key: 'STATIC', // tension, edge, storm pressure
-    bias: 0.08,
     weights: {
       browDownLeft: 0.75,
       browDownRight: 0.75,
@@ -89,29 +89,25 @@ export const AXES = [
   },
   {
     key: 'DRIFT', // dreamy, elsewhere, low gravity
-    bias: 0.12,
     weights: {
       eyeLookUpLeft: 0.5,
       eyeLookUpRight: 0.5,
       eyeLookOutLeft: 0.35,
       eyeLookOutRight: 0.35,
     },
-    features: { roll: 0.55, still: 0.25 },
+    features: { roll: 0.7 },
   },
   {
     key: 'MELLOW', // soft, warm, unhurried
-    bias: 0.1,
     weights: {
-      mouthSmileLeft: 0.6,
-      mouthSmileRight: 0.6,
+      mouthSmileLeft: 0.7,
+      mouthSmileRight: 0.7,
       cheekSquintLeft: 0.35,
       cheekSquintRight: 0.35,
     },
-    features: { still: 0.3 },
   },
   {
     key: 'FERAL', // chaos, appetite, no warranty
-    bias: 0.06,
     weights: {
       jawOpen: 0.9,
       mouthStretchLeft: 0.4,
@@ -147,6 +143,11 @@ export const WARP = {
   // (hair and cheeks smear into the spikes, like the reference). 0 = the
   // old fully-linear remap, which dishes the whole face concave.
   coreLock: 0.55,
+  // Expressions PULL, rest doesn't: the warp target per direction is
+  // silhouette + excitement × (polygon − silhouette), outward only, where
+  // excitement is the axis value past this deadzone. A neutral face (all
+  // values ≈ 0) renders as an untouched head cutout.
+  pullDead: 0.05,
 };
 
 // ── Gestures (SCULPT mode) — normalized to hand size, from HÄND STUDIO ──

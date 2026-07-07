@@ -1,10 +1,11 @@
 # VIBE UNIT
 
 **Your face is the chart.** A webcam vibe radar in the HÄND STUDIO CV-debug
-aesthetic: MediaPipe segments your head and a WebGL warp pulls its silhouette
-into a five-axis radar polygon (VOLT · STATIC · DRIFT · MELLOW · FERAL) — the
-spikes ARE your reading. Inspired by the humanoid "what's your vibe today?"
-campaign.
+aesthetic: MediaPipe segments your head into a clean cutout at the centre of a
+five-axis radar (VOLT · STATIC · DRIFT · MELLOW · FERAL). A resting face is
+shown untouched — make an expression and a WebGL warp pulls your silhouette
+outward toward the matching spike. The spikes ARE your reading. Inspired by
+the humanoid "what's your vibe today?" campaign.
 
 Two modes:
 
@@ -37,9 +38,12 @@ python3 -m http.server 8000
   first SCULPT. Decoupled from the render loop; failures degrade gracefully.
 - `js/axes.js` — blendshapes + head-motion features → five smoothed axis
   values (pure math exported for tests).
-- `js/warp.js` — the trick: per-direction radial remap in a fragment shader
-  so the mask silhouette lands exactly on the radar polygon. Pure profile
-  math (`polygonRadii`, `silhouetteRadii`) is testable headlessly.
+- `js/warp.js` — the trick: per-direction radial remap in a fragment shader.
+  The warp target is `pullProfile` = silhouette + excitement × (polygon −
+  silhouette), outward only, so a neutral face (all axes ≈ 0) is an exact
+  identity and expressions pull the rim toward the spikes; an identity core
+  (`WARP.coreLock`) keeps eyes/nose at natural scale. Pure profile math
+  (`polygonRadii`, `silhouetteRadii`, `pullProfile`) is testable headlessly.
 - `js/hud.js` — the radar chart (rings/spokes under the head, labels/values/
   markers over it), scan ring, capture flash, grip crosses. Takes an explicit
   chart object so the poster reuses it.

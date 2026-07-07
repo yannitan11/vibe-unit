@@ -94,6 +94,27 @@ export function silhouetteRadii(mask, cx, cy, minPx, capPx, buckets, videoW, vid
   return out;
 }
 
+// ── Expression-gated pull ──
+// The warp target per bucket: your own silhouette, pulled OUTWARD toward
+// the radar polygon by how excited the nearby axes are. All values ≈ 0
+// (neutral face) → target == silhouette → the shader is an exact identity
+// and the head renders as an untouched cutout.
+//   rBase/rPoly: Float32Array[buckets]; values: 0..1 per axis.
+export function pullProfile(rBase, rPoly, values, dead) {
+  const n = values.length;
+  const buckets = rBase.length;
+  const e = values.map((v) => Math.max(0, Math.min(1, (v - dead) / (1 - dead))));
+  const out = new Float32Array(buckets);
+  for (let i = 0; i < buckets; i++) {
+    const rel = (i / buckets) * n;
+    const k = Math.floor(rel) % n;
+    const t = rel - Math.floor(rel);
+    const w = e[k] * (1 - t) + e[(k + 1) % n] * t;
+    out[i] = rBase[i] + w * Math.max(0, rPoly[i] - rBase[i]);
+  }
+  return out;
+}
+
 // Circular smoothing pass ([.25,.5,.25]) — run 1-2× on the silhouette so
 // hair strands don't make the star flicker.
 export function smoothProfile(arr, passes = 1) {

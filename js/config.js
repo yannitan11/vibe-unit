@@ -142,6 +142,11 @@ export const WARP = {
   maxR: 2.6, // clamp silhouette radius ≤ this × face size (neck chop)
   centerBias: 0.25, // head centre = eye midpoint nudged this far to nose tip
   edgeFadePx: 2.5, // soft fade at the polygon boundary (CSS px)
+  // Fraction of min(silhouette, polygon) radius that maps 1:1 — the face
+  // core stays flat/natural and ALL the stretch happens in the rim band
+  // (hair and cheeks smear into the spikes, like the reference). 0 = the
+  // old fully-linear remap, which dishes the whole face concave.
+  coreLock: 0.55,
 };
 
 // ── Gestures (SCULPT mode) — normalized to hand size, from HÄND STUDIO ──

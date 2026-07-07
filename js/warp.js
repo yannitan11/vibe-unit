@@ -138,6 +138,7 @@ uniform vec2 uCoverSize;  // dw, dh of the cover-fit video
 uniform float uThresh;
 uniform float uFeather;
 uniform float uEdgePx;
+uniform float uCore;      // WARP.coreLock — identity fraction of min(Rb, Rt)
 
 const float TAU = 6.28318530718;
 
@@ -154,8 +155,18 @@ void main() {
   float Rb = lutR(lut.ba) * uMaxR;
   if (r > Rt + 1.0 || Rt < 1.0) { discard; }
 
-  float u = r / max(Rt, 1.0);
-  float rSrc = u * Rb; // linear per-direction remap: silhouette → polygon
+  // Identity-core remap: inside the core radius the face maps 1:1 (flat);
+  // only the rim band [core, Rt] stretches/compresses onto [core, Rb], so
+  // the silhouette still lands exactly on the polygon but eyes/nose keep
+  // their natural scale — a fully-linear remap dishes the face concave.
+  float core = uCore * min(Rb, Rt);
+  float rSrc;
+  if (r <= core) {
+    rSrc = r;
+  } else {
+    float t = (r - core) / max(Rt - core, 1.0);
+    rSrc = core + t * (Rb - core);
+  }
   vec2 srcPx = uHead + (r > 0.5 ? vPos / r : vec2(0.0)) * rSrc;
 
   // full-canvas device px → raw video uv (undo mirror + cover fit)
@@ -218,6 +229,7 @@ export class HeadWarp {
     for (const name of [
       'uSize', 'uVideo', 'uMask', 'uLUT', 'uStart', 'uMaxR', 'uBuckets',
       'uHead', 'uW', 'uCoverOff', 'uCoverSize', 'uThresh', 'uFeather', 'uEdgePx',
+      'uCore',
     ]) {
       this.u[name] = gl.getUniformLocation(prog, name);
     }
@@ -311,6 +323,7 @@ export class HeadWarp {
     gl.uniform1f(this.u.uThresh, WARP.maskThreshold);
     gl.uniform1f(this.u.uFeather, WARP.maskFeather);
     gl.uniform1f(this.u.uEdgePx, WARP.edgeFadePx * dpr);
+    gl.uniform1f(this.u.uCore, WARP.coreLock);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);

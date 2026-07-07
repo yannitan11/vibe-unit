@@ -149,7 +149,12 @@ function step(now, dtMs) {
     headPx = mapPoint(cov, { x: cxN, y: cyN });
     // expressions pull the silhouette toward the polygon; rest = pure cutout
     const rPoly = polygonRadii(values, WARP.rays, chart.innerR, chart.outerR);
-    const rTarget = pullProfile(rBase, rPoly, values, WARP.pullDead);
+    const rTarget = pullProfile(rBase, rPoly, values, {
+      dead: WARP.pullDead,
+      gain: WARP.pullGain,
+      stretch: WARP.stretch,
+      maxR: chart.outerR,
+    });
     headOk = warp.render(video, mask, rBase, rTarget, headPx, cov, dpr);
   }
   if (!face) headPx = null;

@@ -120,7 +120,7 @@ export const AXES = [
 ];
 
 export const SMOOTH = {
-  axisLerp: 0.12, // per-frame lerp of axis values toward the raw reading
+  axisLerp: 0.16, // per-frame lerp of axis values toward the raw reading
   profileLerp: 0.35, // per-frame lerp of the silhouette radius profile
   speedNorm: 3, // head speed (face-widths/second) that counts as 1.0
   rollNorm: 0.45, // head roll (radians) that counts as 1.0
@@ -143,11 +143,16 @@ export const WARP = {
   // (hair and cheeks smear into the spikes, like the reference). 0 = the
   // old fully-linear remap, which dishes the whole face concave.
   coreLock: 0.55,
-  // Expressions PULL, rest doesn't: the warp target per direction is
-  // silhouette + excitement × (polygon − silhouette), outward only, where
-  // excitement is the axis value past this deadzone. A neutral face (all
-  // values ≈ 0) renders as an untouched head cutout.
-  pullDead: 0.05,
+  // Expressions PULL, rest doesn't: the warp target per direction is the
+  // silhouette pulled outward toward max(polygon vertex, stretch floor),
+  // weighted by excitement. A neutral face (all values ≈ 0) renders as an
+  // untouched head cutout.
+  pullDead: 0.05, // axis value below this = no pull at all
+  pullGain: 1.8, // excitement = (value − dead) × gain — moderate faces hit hard
+  // An excited axis always pulls to at least silhouette × (1 + stretch),
+  // capped at the outer ring — without this floor the polygon vertex sits
+  // inside the head at moderate values and nothing visibly moves.
+  stretch: 0.9,
 };
 
 // ── Gestures (SCULPT mode) — normalized to hand size, from HÄND STUDIO ──

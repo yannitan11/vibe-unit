@@ -95,22 +95,33 @@ export function silhouetteRadii(mask, cx, cy, minPx, capPx, buckets, videoW, vid
 }
 
 // ── Expression-gated pull ──
-// The warp target per bucket: your own silhouette, pulled OUTWARD toward
-// the radar polygon by how excited the nearby axes are. All values ≈ 0
-// (neutral face) → target == silhouette → the shader is an exact identity
-// and the head renders as an untouched cutout.
-//   rBase/rPoly: Float32Array[buckets]; values: 0..1 per axis.
-export function pullProfile(rBase, rPoly, values, dead) {
+// The warp target per bucket: your own silhouette, pulled OUTWARD by how
+// excited the nearby axes are. All values ≈ 0 (neutral face) → target ==
+// silhouette → the shader is an exact identity and the head renders as an
+// untouched cutout.
+//
+// The pull destination per direction is max(polygon vertex, silhouette ×
+// (1 + stretch)) capped at maxR — the stretch floor is what makes moderate
+// expressions dramatic: the polygon vertex alone often sits INSIDE the
+// head, and outward-only pulling toward it would do nothing visible.
+//   rBase/rPoly: Float32Array[buckets]; values: 0..1 per axis;
+//   opts: { dead, gain, stretch, maxR } (see WARP config).
+export function pullProfile(rBase, rPoly, values, opts) {
+  const { dead, gain, stretch, maxR } = opts;
   const n = values.length;
   const buckets = rBase.length;
-  const e = values.map((v) => Math.max(0, Math.min(1, (v - dead) / (1 - dead))));
+  const e = values.map((v) =>
+    Math.max(0, Math.min(1, (v - dead) * gain))
+  );
   const out = new Float32Array(buckets);
   for (let i = 0; i < buckets; i++) {
     const rel = (i / buckets) * n;
     const k = Math.floor(rel) % n;
     const t = rel - Math.floor(rel);
     const w = e[k] * (1 - t) + e[(k + 1) % n] * t;
-    out[i] = rBase[i] + w * Math.max(0, rPoly[i] - rBase[i]);
+    const floor = Math.min(maxR, rBase[i] * (1 + stretch));
+    const dest = Math.max(rPoly[i], floor);
+    out[i] = rBase[i] + w * Math.max(0, dest - rBase[i]);
   }
   return out;
 }

@@ -21,7 +21,7 @@ const startScreen = el('startScreen');
 const errorScreen = el('errorScreen');
 const loading = el('loading');
 const resultCard = el('resultCard');
-startScreen.querySelector('.eyebrow').textContent = `${BRAND.watermark} — ${BRAND.build}`;
+startScreen.querySelector('.eyebrow').textContent = `${BRAND.watermark} ${BRAND.build}`;
 
 // ── State ──
 const engine = new AxisEngine();
@@ -140,8 +140,8 @@ function step(now, dtMs) {
       WARP.rays, cov.vw, cov.vh
     );
     smoothProfile(sil, 2);
+    const fresh = !rBase || !headPx; // first frame or post-resize: snap, don't lerp
     if (!rBase) rBase = new Float32Array(WARP.rays);
-    const fresh = !headPx;
     for (let i = 0; i < WARP.rays; i++) {
       const px = sil[i] * cov.scale; // video px → canvas device px
       rBase[i] = fresh ? px : rBase[i] + (px - rBase[i]) * SMOOTH.profileLerp;
@@ -432,7 +432,7 @@ function showError(err) {
   if (err instanceof CameraError && err.kind === 'denied') {
     title.textContent = 'Camera blocked.';
     msg.textContent =
-      'Allow camera access in your browser’s site settings, then try again. Nothing is recorded — the feed stays on your device.';
+      'Allow camera access in your browser’s site settings, then try again. Nothing is recorded; the feed stays on your device.';
   } else if (err instanceof CameraError && err.kind === 'notfound') {
     title.textContent = 'No camera found.';
     msg.textContent = 'Plug in or enable a webcam and try again.';

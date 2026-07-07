@@ -4,8 +4,8 @@
     {
       "name": "vibe-unit",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["/tmp/claude-preview/serve.py", "/tmp/claude-preview/vibe-unit", "8135"],
-      "port": 8135
+      "runtimeArgs": ["/tmp/claude-preview/serve.py", "/tmp/claude-preview/vibe-unit", "8136"],
+      "port": 8136
     }
   ]
 }

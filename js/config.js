@@ -132,7 +132,10 @@ export const SMOOTH = {
 
 // ── The head warp ──
 export const WARP = {
-  rays: 64, // angular buckets for silhouette + polygon profiles
+  // Angular buckets for the silhouette + polygon profiles. Must be a power
+  // of two (the radius LUT wraps via gl.REPEAT). 256 keeps the spike tips
+  // sharp — at 64 the LUT interpolation visibly blunts them.
+  rays: 256,
   maskThreshold: 0.5, // person-probability that counts as "head"
   maskFeather: 0.15, // smoothstep half-width around the threshold
   minR: 0.6, // clamp silhouette radius ≥ this × face size
